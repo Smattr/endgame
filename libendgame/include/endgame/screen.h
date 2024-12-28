@@ -49,9 +49,18 @@ ENDGAME_API size_t eg_screen_get_columns(eg_screen_t *me);
 /// get the number of rows in the terminal
 ENDGAME_API size_t eg_screen_get_rows(eg_screen_t *me);
 
+/// write some text to the screen
+///
+/// \param me Screen to write to
+/// \param x Column at which to begin the write
+/// \param y Row at which to begin the write
+/// \param text Text to write
+/// \param len Number of bytes in `text`
+/// \return 0 on success or an errno on failure
 ENDGAME_API int eg_screen_put(eg_screen_t *me, size_t x, size_t y,
                               const char *text, size_t len);
 
+/// flush pending writes to the screen
 ENDGAME_API void eg_screen_sync(eg_screen_t *me);
 
 /** get a new event
