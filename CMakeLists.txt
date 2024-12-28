@@ -16,6 +16,19 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
 endif()
 
+if(APPLE)
+  list(APPEND CMAKE_INSTALL_RPATH "@executable_path/../${CMAKE_INSTALL_LIBDIR}")
+else()
+  list(APPEND CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+endif()
+
+# when building static libraries, at best the visibility annotations are
+# redundant and at worst they are incorrect (`__declspec(dllimport)` on MSVC),
+# so suppress them
+if(NOT BUILD_SHARED_LIBS)
+  add_compile_definitions(ENDGAME_API=)
+endif()
+
 # enable more warnings
 include(CheckCCompilerFlag)
 CHECK_C_COMPILER_FLAG(-Wall HAS_C_WARNING_ALL)
@@ -77,4 +90,5 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release" OR
   endif()
 endif()
 
+add_subdirectory(libendgame)
 add_subdirectory(llamaterm)

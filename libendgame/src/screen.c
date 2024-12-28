@@ -1,5 +1,5 @@
-#include "screen.h"
 #include <assert.h>
+#include <endgame/screen.h>
 #include <errno.h>
 #include <limits.h>
 #include <poll.h>
@@ -35,7 +35,7 @@ static int set_window_size(void) {
   return 0;
 }
 
-int screen_init(void) {
+int eg_screen_init(void) {
   assert(!active && "double screen_init() calls");
 
   int rc = 0;
@@ -71,7 +71,7 @@ int screen_init(void) {
   // hide the cursor
   printf("\033[?25l");
 
-  screen_clear();
+  eg_screen_clear();
 
   // ensure our changes take effect
   fflush(stdout);
@@ -80,16 +80,16 @@ int screen_init(void) {
 
 done:
   if (rc != 0)
-    screen_free();
+    eg_screen_free();
 
   return rc;
 }
 
-size_t screen_get_columns(void) { return columns; }
+size_t eg_screen_get_columns(void) { return columns; }
 
-size_t screen_get_rows(void) { return rows; }
+size_t eg_screen_get_rows(void) { return rows; }
 
-int screen_put(size_t x, size_t y, const char *text, size_t len) {
+int eg_screen_put(size_t x, size_t y, const char *text, size_t len) {
   if (len > INT_MAX)
     return ERANGE;
   if (x > columns)
@@ -101,9 +101,9 @@ int screen_put(size_t x, size_t y, const char *text, size_t len) {
   return 0;
 }
 
-void screen_sync(void) { fflush(stdout); }
+void eg_screen_sync(void) { fflush(stdout); }
 
-event_t screen_read(void) {
+eg_event_t eg_screen_read(void) {
   assert(active && "read from screen prior to screen_init()");
 
   // wait until we have some data on stdin or from the signal bouncer
@@ -116,7 +116,7 @@ event_t screen_read(void) {
         break;
       if (errno == EINTR)
         continue;
-      return (event_t){EVENT_ERROR, (uint32_t)errno};
+      return (eg_event_t){EG_EVENT_ERROR, (uint32_t)errno};
     }
   }
 
@@ -134,13 +134,13 @@ event_t screen_read(void) {
         if (signum == SIGWINCH) {
           int rc = set_window_size();
           if (rc != 0)
-            return (event_t){EVENT_ERROR, (uint32_t)rc};
+            return (eg_event_t){EG_EVENT_ERROR, (uint32_t)rc};
         }
 
-        return (event_t){EVENT_SIGNAL, (uint32_t)signum};
+        return (eg_event_t){EG_EVENT_SIGNAL, (uint32_t)signum};
       }
     } while (errno == EINTR);
-    return (event_t){EVENT_ERROR, (uint32_t)errno};
+    return (eg_event_t){EG_EVENT_ERROR, (uint32_t)errno};
   }
 #endif
 
@@ -150,7 +150,7 @@ event_t screen_read(void) {
   unsigned char buffer[4] = {
       0}; // enough for a UTF-8 character or escape sequence
   if (read(STDIN_FILENO, &buffer, 1) < 0)
-    return (event_t){EVENT_ERROR, errno};
+    return (eg_event_t){EG_EVENT_ERROR, errno};
 
   // is this a multi-byte sequence?
   size_t more = 0;
@@ -176,18 +176,18 @@ event_t screen_read(void) {
   }
 
   // construct a key press event
-  event_t key = {.type = EVENT_KEYPRESS};
+  eg_event_t key = {.type = EG_EVENT_KEYPRESS};
   for (size_t i = 0; i < sizeof(buffer) / sizeof(buffer[0]); ++i)
     key.value |= (uint32_t)buffer[i] << (i * 8);
   return key;
 }
 
-void screen_clear(void) {
+void eg_screen_clear(void) {
   // clear screen and move to upper left
   printf("\033[2J");
 }
 
-void screen_free(void) {
+void eg_screen_free(void) {
 
   if (active) {
 
@@ -195,7 +195,7 @@ void screen_free(void) {
     // the alternate screen
     fflush(stdout);
 
-    screen_clear();
+    eg_screen_clear();
 
     // show the cursor
     printf("\033[?25h");
