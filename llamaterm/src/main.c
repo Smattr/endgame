@@ -8,9 +8,10 @@ static const char LLAMA[] = "🦙";
 
 int main(void) {
 
+  eg_screen_t *screen = NULL;
   int rc = 0;
 
-  if ((rc = eg_screen_init())) {
+  if ((rc = eg_screen_init(&screen))) {
     fprintf(stderr, "failed to setup screen: %s\n", strerror(rc));
     goto done;
   }
@@ -19,21 +20,21 @@ int main(void) {
   size_t column = 1;
 
   while (true) {
-    if ((rc = eg_screen_put(column, row, LLAMA, strlen(LLAMA)))) {
-      eg_screen_free();
+    if ((rc = eg_screen_put(screen, column, row, LLAMA, strlen(LLAMA)))) {
+      eg_screen_free(&screen);
       fprintf(stderr, "failed to write llama: %s\n", strerror(rc));
       goto done;
     }
 
-    eg_screen_sync();
+    eg_screen_sync(screen);
 
-    const eg_event_t event = eg_screen_read();
+    const eg_event_t event = eg_screen_read(screen);
 
     if (event.type == EG_EVENT_KEYPRESS && event.value == 0x4) // Ctrl-D
       break;
 
-    if ((rc = eg_screen_put(column, row, " ", 1))) {
-      eg_screen_free();
+    if ((rc = eg_screen_put(screen, column, row, " ", 1))) {
+      eg_screen_free(&screen);
       fprintf(stderr, "failed to overwrite llama: %s\n", strerror(rc));
       goto done;
     }
@@ -55,7 +56,7 @@ int main(void) {
   }
 
 done:
-  eg_screen_free();
+  eg_screen_free(&screen);
 
   return rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
