@@ -112,9 +112,15 @@ int eg_screen_put(eg_screen_t *me, size_t x, size_t y, const char *text,
   return 0;
 }
 
-void eg_screen_sync(eg_screen_t *me) {
-  (void)me;
-  fflush(stdout);
+int eg_screen_sync(eg_screen_t *me) {
+
+  if (me == NULL)
+    return EINVAL;
+
+  if (fflush(stdout) < 0)
+    return errno;
+
+  return 0;
 }
 
 eg_event_t eg_screen_read(eg_screen_t *me) {

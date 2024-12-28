@@ -26,7 +26,11 @@ int main(void) {
       goto done;
     }
 
-    eg_screen_sync(screen);
+    if ((rc = eg_screen_sync(screen))) {
+      eg_screen_free(&screen);
+      fprintf(stderr, "failed to sync screen: %s\n", strerror(rc));
+      goto done;
+    }
 
     const eg_event_t event = eg_screen_read(screen);
 

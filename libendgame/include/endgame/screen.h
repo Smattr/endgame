@@ -61,7 +61,10 @@ ENDGAME_API int eg_screen_put(eg_screen_t *me, size_t x, size_t y,
                               const char *text, size_t len);
 
 /// flush pending writes to the screen
-ENDGAME_API void eg_screen_sync(eg_screen_t *me);
+///
+/// \param me Screen to synchronise
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_screen_sync(eg_screen_t *me);
 
 /** get a new event
  *
