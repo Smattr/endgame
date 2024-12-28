@@ -22,6 +22,7 @@ extern "C" {
 typedef enum {
   EG_EVENT_ERROR,
   EG_EVENT_KEYPRESS,
+  EG_EVENT_TICK, ///< a game tick
   EG_EVENT_SIGNAL,
 } eg_event_type_t;
 
@@ -76,10 +77,18 @@ ENDGAME_API int eg_screen_sync(eg_screen_t *me);
  * by reading stdin. This means e.g. Ctrl-D comes out as 0x4. Non-ASCII UTF-8
  * characters are also readable naturally this way.
  *
+ * The game “tick” specified by the `tick` parameter can be either:
+ *   1. A number of milliseconds. This indirectly determines the framerate of
+ *      the game. That is, `fps = 1000 / tick`.
+ *   2. -1, indicating there is no tick. This means game actions will only
+ *      happen when the user presses keys. That is, `eg_screen_read` blocks
+ *      indefinitely until a key is pressed.
+ *
  * \param me Screen to read from
+ * \param tick Timeout (ms) after which a tick is considered to have happened
  * \return Event seen
  */
-ENDGAME_API eg_event_t eg_screen_read(eg_screen_t *me);
+ENDGAME_API eg_event_t eg_screen_read(eg_screen_t *me, int tick);
 
 /// blank the screen, clearing all text
 ///

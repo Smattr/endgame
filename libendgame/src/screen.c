@@ -159,7 +159,7 @@ int eg_screen_sync(eg_screen_t *me) {
   return 0;
 }
 
-eg_event_t eg_screen_read(eg_screen_t *me) {
+eg_event_t eg_screen_read(eg_screen_t *me, int tick) {
 
   if (me == NULL)
     return (eg_event_t){EG_EVENT_ERROR, EINVAL};
@@ -173,8 +173,11 @@ eg_event_t eg_screen_read(eg_screen_t *me) {
   {
     nfds_t nfds = sizeof(in) / sizeof(in[0]);
     while (true) {
-      if (poll(in, nfds, -1) >= 0)
+      const int r = poll(in, nfds, tick);
+      if (r > 0)
         break;
+      if (r == 0)
+        return (eg_event_t){.type = EG_EVENT_TICK};
       if (errno == EINTR)
         continue;
       return (eg_event_t){EG_EVENT_ERROR, (uint32_t)errno};
