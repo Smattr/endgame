@@ -73,7 +73,8 @@ int eg_screen_new(eg_screen_t **me) {
   // hide the cursor
   printf("\033[?25l");
 
-  eg_screen_clear(s);
+  if ((rc = eg_screen_clear(s)))
+    goto done;
 
   // ensure our changes take effect
   fflush(stdout);
@@ -207,10 +208,16 @@ eg_event_t eg_screen_read(eg_screen_t *me) {
   return key;
 }
 
-void eg_screen_clear(eg_screen_t *me) {
-  (void)me;
+int eg_screen_clear(eg_screen_t *me) {
+
+  if (me == NULL)
+    return EINVAL;
+
   // clear screen and move to upper left
-  printf("\033[2J");
+  if (printf("\033[2J") < 0)
+    return EIO;
+
+  return 0;
 }
 
 void eg_screen_free(eg_screen_t **me) {
@@ -227,7 +234,7 @@ void eg_screen_free(eg_screen_t **me) {
     // the alternate screen
     fflush(stdout);
 
-    eg_screen_clear(*me);
+    (void)eg_screen_clear(*me);
 
     // show the cursor
     printf("\033[?25h");

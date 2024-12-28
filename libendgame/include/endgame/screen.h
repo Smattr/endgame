@@ -79,7 +79,10 @@ ENDGAME_API int eg_screen_sync(eg_screen_t *me);
 ENDGAME_API eg_event_t eg_screen_read(eg_screen_t *me);
 
 /// blank the screen, clearing all text
-ENDGAME_API void eg_screen_clear(eg_screen_t *me);
+///
+/// \param me Screen to clear
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_screen_clear(eg_screen_t *me);
 
 /** reverse the setup steps from `eg_screen_new`
  *
