@@ -25,7 +25,7 @@ static int set_window_size(eg_screen_t *scr) {
   return 0;
 }
 
-int eg_screen_init(eg_screen_t **me) {
+int eg_screen_new(eg_screen_t **me) {
 
   if (me == NULL)
     return EINVAL;

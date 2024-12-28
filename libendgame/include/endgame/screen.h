@@ -41,7 +41,7 @@ typedef struct eg_screen eg_screen_t;
  * \param me [out] Created screen on success
  * \return 0 on success or an errno on failure.
  */
-ENDGAME_API int eg_screen_init(eg_screen_t **me);
+ENDGAME_API int eg_screen_new(eg_screen_t **me);
 
 /// get the number of columns in the terminal
 ENDGAME_API size_t eg_screen_get_columns(eg_screen_t *me);
@@ -69,9 +69,9 @@ ENDGAME_API eg_event_t eg_screen_read(eg_screen_t *me);
 /// blank the screen, clearing all text
 ENDGAME_API void eg_screen_clear(eg_screen_t *me);
 
-/** reverse the setup steps from `eg_screen_init`
+/** reverse the setup steps from `eg_screen_new`
  *
- * After calling this function, `eg_screen_init` must be called again before
+ * After calling this function, `eg_screen_new` must be called again before
  * using any of the other functions in this header.
  */
 ENDGAME_API void eg_screen_free(eg_screen_t **me);
