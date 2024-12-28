@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -146,6 +147,10 @@ int eg_screen_put(eg_screen_t *me, size_t x, size_t y, const char *text,
   if (fprintf(me->out, "\033[%zu;%zuH%.*s", y, x, (int)len, text) < 0)
     return EIO;
   return 0;
+}
+
+int eg_screen_puts(eg_screen_t *me, size_t x, size_t y, const char *text) {
+  return eg_screen_put(me, x, y, text, strlen(text));
 }
 
 int eg_screen_sync(eg_screen_t *me) {

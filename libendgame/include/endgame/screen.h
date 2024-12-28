@@ -64,6 +64,16 @@ ENDGAME_API size_t eg_screen_get_rows(eg_screen_t *me);
 ENDGAME_API int eg_screen_put(eg_screen_t *me, size_t x, size_t y,
                               const char *text, size_t len);
 
+/// write a null terminated string to the screen
+///
+/// \param me Screen to write to
+/// \param x Column at which to begin the write
+/// \param y Row at which to begin the write
+/// \param text String to write
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_screen_puts(eg_screen_t *me, size_t x, size_t y,
+                               const char *text);
+
 /// flush pending writes to the screen
 ///
 /// \param me Screen to synchronise

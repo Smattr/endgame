@@ -49,7 +49,7 @@ int main(void) {
   }
 
   while (true) {
-    if ((rc = eg_screen_put(screen, column, row, LLAMA, strlen(LLAMA)))) {
+    if ((rc = eg_screen_puts(screen, column, row, LLAMA))) {
       eg_screen_free(&screen);
       fprintf(stderr, "failed to write llama: %s\n", strerror(rc));
       goto done;
@@ -75,7 +75,7 @@ int main(void) {
     if (event.type == EG_EVENT_KEYPRESS && event.value == 0x4) // Ctrl-D
       break;
 
-    if ((rc = eg_screen_put(screen, column, row, " ", 1))) {
+    if ((rc = eg_screen_puts(screen, column, row, " "))) {
       eg_screen_free(&screen);
       fprintf(stderr, "failed to overwrite llama: %s\n", strerror(rc));
       goto done;
