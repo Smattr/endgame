@@ -11,7 +11,7 @@ int main(void) {
   eg_screen_t *screen = NULL;
   int rc = 0;
 
-  if ((rc = eg_screen_new(&screen))) {
+  if ((rc = eg_screen_new(&screen, stdout, stdin))) {
     fprintf(stderr, "failed to setup screen: %s\n", strerror(rc));
     goto done;
   }

@@ -16,7 +16,7 @@ static int set_window_size(eg_screen_t *scr) {
   assert(scr != NULL);
 
   struct winsize ws = {0};
-  if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0)
+  if (ioctl(fileno(scr->out), TIOCGWINSZ, &ws) < 0)
     return errno;
 
   scr->rows = ws.ws_row;
@@ -25,9 +25,15 @@ static int set_window_size(eg_screen_t *scr) {
   return 0;
 }
 
-int eg_screen_new(eg_screen_t **me) {
+int eg_screen_new(eg_screen_t **me, FILE *out, FILE *in) {
 
   if (me == NULL)
+    return EINVAL;
+
+  if (out == NULL)
+    return EINVAL;
+
+  if (in == NULL)
     return EINVAL;
 
   *me = NULL;
@@ -40,15 +46,33 @@ int eg_screen_new(eg_screen_t **me) {
     goto done;
   }
 
+  s->out = out;
+  s->in = in;
+
+  // check we can `fileno` both streams
+  const int out_fd = fileno(out);
+  if (out_fd < 0) {
+    rc = errno;
+    goto done;
+  }
+  const int in_fd = fileno(in);
+  if (in_fd < 0) {
+    rc = errno;
+    goto done;
+  }
+
   // drain any pending output so it will not be subject to our termios changes
-  (void)fflush(stdout);
+  if (fflush(out) < 0) {
+    rc = errno;
+    goto done;
+  }
 
   // determine terminal dimensions
   if ((rc = set_window_size(s)))
     goto done;
 
   // read terminal characteristics
-  if (tcgetattr(STDOUT_FILENO, &s->original_termios) < 0) {
+  if (tcgetattr(out_fd, &s->original_termios) < 0) {
     rc = errno;
     goto done;
   }
@@ -61,7 +85,7 @@ int eg_screen_new(eg_screen_t **me) {
     struct termios new = s->original_termios;
     new.c_lflag &= ~ECHO;   // turn off echo
     new.c_lflag &= ~ICANON; // turn off canonical mode
-    if (tcsetattr(STDOUT_FILENO, TCSANOW, &new) < 0) {
+    if (tcsetattr(out_fd, TCSANOW, &new) < 0) {
       rc = errno;
       goto done;
     }
@@ -70,16 +94,25 @@ int eg_screen_new(eg_screen_t **me) {
   s->active = true;
 
   // switch to the alternate screen
-  printf("\033[?1049h");
+  if (fprintf(out, "\033[?1049h") < 0) {
+    rc = EIO;
+    goto done;
+  }
 
   // hide the cursor
-  printf("\033[?25l");
+  if (fprintf(out, "\033[?25l") < 0) {
+    rc = EIO;
+    goto done;
+  }
 
   if ((rc = eg_screen_clear(s)))
     goto done;
 
   // ensure our changes take effect
-  fflush(stdout);
+  if (fflush(out) < 0) {
+    rc = errno;
+    goto done;
+  }
 
   *me = s;
   s = NULL;
@@ -110,7 +143,7 @@ int eg_screen_put(eg_screen_t *me, size_t x, size_t y, const char *text,
     return ERANGE;
   if (y > me->rows)
     return ERANGE;
-  if (printf("\033[%zu;%zuH%.*s", y, x, (int)len, text) < 0)
+  if (fprintf(me->out, "\033[%zu;%zuH%.*s", y, x, (int)len, text) < 0)
     return EIO;
   return 0;
 }
@@ -120,7 +153,7 @@ int eg_screen_sync(eg_screen_t *me) {
   if (me == NULL)
     return EINVAL;
 
-  if (fflush(stdout) < 0)
+  if (fflush(me->out) < 0)
     return errno;
 
   return 0;
@@ -135,7 +168,7 @@ eg_event_t eg_screen_read(eg_screen_t *me) {
     return (eg_event_t){EG_EVENT_ERROR, EINVAL};
 
   // wait until we have some data on stdin or from the signal bouncer
-  struct pollfd in[] = {{.fd = STDIN_FILENO, .events = POLLIN},
+  struct pollfd in[] = {{.fd = fileno(me->in), .events = POLLIN},
                         /* {.fd = signal_pipe[0], .events = POLLIN}*/};
   {
     nfds_t nfds = sizeof(in) / sizeof(in[0]);
@@ -177,7 +210,7 @@ eg_event_t eg_screen_read(eg_screen_t *me) {
   // priority 3: read a character from stdin
   unsigned char buffer[4] = {
       0}; // enough for a UTF-8 character or escape sequence
-  if (read(STDIN_FILENO, &buffer, 1) < 0)
+  if (read(fileno(me->in), &buffer, 1) < 0)
     return (eg_event_t){EG_EVENT_ERROR, errno};
 
   // is this a multi-byte sequence?
@@ -194,11 +227,11 @@ eg_event_t eg_screen_read(eg_screen_t *me) {
 
   if (more > 0) {
     // does stdin have remaining ready data?
-    struct pollfd input[] = {{.fd = STDIN_FILENO, .events = POLLIN}};
+    struct pollfd input[] = {{.fd = fileno(me->in), .events = POLLIN}};
     nfds_t nfds = sizeof(input) / sizeof(input[0]);
     if (poll(input, nfds, 0) > 0) {
       assert(more <= sizeof(buffer) / sizeof(buffer[0]) - 1);
-      ssize_t ignored = read(STDIN_FILENO, &buffer[1], more);
+      ssize_t ignored = read(fileno(me->in), &buffer[1], more);
       (void)ignored;
     }
   }
@@ -216,7 +249,7 @@ int eg_screen_clear(eg_screen_t *me) {
     return EINVAL;
 
   // clear screen and move to upper left
-  if (printf("\033[2J") < 0)
+  if (fprintf(me->out, "\033[2J") < 0)
     return EIO;
 
   return 0;
@@ -234,20 +267,20 @@ void eg_screen_free(eg_screen_t **me) {
 
     // drain anything pending to avoid it coming out once we switch away from
     // the alternate screen
-    fflush(stdout);
+    fflush((*me)->out);
 
     (void)eg_screen_clear(*me);
 
     // show the cursor
-    printf("\033[?25h");
+    fprintf((*me)->out, "\033[?25h");
 
     // switch out of the alternate screen
-    printf("\033[?1049l");
+    fprintf((*me)->out, "\033[?1049l");
 
     // restore the original terminal characteristics
-    (void)tcsetattr(STDOUT_FILENO, TCSANOW, &(*me)->original_termios);
+    (void)tcsetattr(fileno((*me)->out), TCSANOW, &(*me)->original_termios);
 
-    fflush(stdout);
+    fflush((*me)->out);
   }
 
   free(*me);

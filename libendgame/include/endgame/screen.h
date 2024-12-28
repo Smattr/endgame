@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,9 +40,11 @@ typedef struct eg_screen eg_screen_t;
  * header.
  *
  * \param me [out] Created screen on success
+ * \param out Output stream for this screen
+ * \param in Input stream for this screen
  * \return 0 on success or an errno on failure.
  */
-ENDGAME_API int eg_screen_new(eg_screen_t **me);
+ENDGAME_API int eg_screen_new(eg_screen_t **me, FILE *out, FILE *in);
 
 /// get the number of columns in the terminal
 ENDGAME_API size_t eg_screen_get_columns(eg_screen_t *me);
