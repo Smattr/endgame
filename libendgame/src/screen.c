@@ -45,11 +45,13 @@ int eg_screen_new(eg_screen_t **me) {
 
   // determine terminal dimensions
   if ((rc = set_window_size(s)))
-    return rc;
+    goto done;
 
   // read terminal characteristics
-  if (tcgetattr(STDOUT_FILENO, &s->original_termios) < 0)
-    return errno;
+  if (tcgetattr(STDOUT_FILENO, &s->original_termios) < 0) {
+    rc = errno;
+    goto done;
+  }
 
   // End of read-only actions. Anything after this point should attempt to be
   // undone on failure.
