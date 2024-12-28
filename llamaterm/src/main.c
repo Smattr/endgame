@@ -12,6 +12,11 @@ static const char LLAMA[] = "🦙";
 /// how often each game step happens
 static const int TICK = 1000; // milliseconds
 
+/// convert a timespec to milliseconds
+static uint64_t ts2ms(struct timespec ts) {
+  return (uint64_t)ts.tv_sec * 1000 + (uint64_t)ts.tv_nsec / 1000000;
+}
+
 int main(void) {
 
   eg_screen_t *screen = NULL;
@@ -34,7 +39,7 @@ int main(void) {
       fprintf(stderr, "clock_gettime failed: %s\n", strerror(rc));
       goto done;
     }
-    last_tick = (uint64_t)last.tv_sec * 1000 + (uint64_t)last.tv_nsec / 1000000;
+    last_tick = ts2ms(last);
   }
 
   while (true) {
@@ -57,8 +62,7 @@ int main(void) {
       fprintf(stderr, "clock_gettime failed: %s\n", strerror(rc));
       goto done;
     }
-    const uint64_t now =
-        (uint64_t)now_ts.tv_sec * 1000 + (uint64_t)now_ts.tv_nsec / 1000000;
+    const uint64_t now = ts2ms(now_ts);
     const int tick = TICK - (int)(now - last_tick);
 
     const eg_event_t event = tick <= 0 ? (eg_event_t){.type = EG_EVENT_TICK}
@@ -81,8 +85,7 @@ int main(void) {
         fprintf(stderr, "clock_gettime failed: %s\n", strerror(rc));
         goto done;
       }
-      last_tick =
-          (uint64_t)last.tv_sec * 1000 + (uint64_t)last.tv_nsec / 1000000;
+      last_tick = ts2ms(last);
     }
 
     if (event.type == EG_EVENT_KEYPRESS && event.value == 0x445b1b) { // ←
