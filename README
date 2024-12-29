@@ -1,0 +1,7 @@
+endgame – a library for building terminal-based games
+─────────────────────────────────────────────────────
+
+Look at the headers in libendgame/include/endgame to get an idea of what is
+possible.
+
+Everything here is in the public domain. Do whatever you like with it.
