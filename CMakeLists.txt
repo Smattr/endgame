@@ -92,4 +92,5 @@ endif()
 
 add_subdirectory(libendgame)
 add_subdirectory(llamaterm)
+add_subdirectory(onlyjump)
 add_subdirectory(termsize)
