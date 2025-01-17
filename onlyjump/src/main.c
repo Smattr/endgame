@@ -47,7 +47,7 @@ static int get_time(uint64_t *ms) {
 
 int main(void) {
 
-  eg_screen_t *screen = NULL;
+  eg_io_t *io = NULL;
   const char **scene = NULL;
   int rc = 0;
 
@@ -55,16 +55,16 @@ int main(void) {
 
 #define DIE(msg)                                                               \
   do {                                                                         \
-    eg_screen_free(&screen);                                                   \
+    eg_io_free(&io);                                                           \
     fprintf(stderr, msg ": %s\n", strerror(rc));                               \
     goto done;                                                                 \
   } while (0)
 
-  if ((rc = eg_screen_new(&screen, stdout, stdin)))
-    DIE("failed to setup screen");
+  if ((rc = eg_io_new(&io, stdin, stdout)))
+    DIE("eg_io_new failed");
 
-  const size_t rows = eg_screen_get_rows(screen);
-  const size_t columns = eg_screen_get_columns(screen);
+  const size_t rows = eg_io_get_rows(io);
+  const size_t columns = eg_io_get_columns(io);
 
   // allocate space to store the scenery
   scene = calloc(columns / 2, sizeof(scene[0]));
@@ -75,8 +75,8 @@ int main(void) {
 
   // draw the “floor”
   for (size_t i = 0; i < columns; ++i) {
-    if ((rc = eg_screen_puts(screen, i + 1, rows - 10, "═")))
-      DIE("eg_screen_puts failed");
+    if ((rc = eg_io_puts(io, i + 1, rows - 10, "═")))
+      DIE("eg_io_puts failed");
   }
 
   // where should our character start?
@@ -102,26 +102,26 @@ int main(void) {
       const char *const tile = (i == me_column && me_row == rows - 12) ? ME
                                : scene[i] == NULL                      ? "  "
                                                   : scene[i];
-      if ((rc = eg_screen_puts(screen, (i + 1) * 2, rows - 11, tile)))
-        DIE("eg_screen_puts failed");
+      if ((rc = eg_io_puts(io, (i + 1) * 2, rows - 11, tile)))
+        DIE("eg_io_puts failed");
     }
 
     // if we are airborne, draw us
     if (me_row != rows - 12) {
-      if ((rc = eg_screen_puts(screen, (me_column + 1) * 2, me_row + 1, ME)))
-        DIE("eg_screen_puts failed");
+      if ((rc = eg_io_puts(io, (me_column + 1) * 2, me_row + 1, ME)))
+        DIE("eg_io_puts failed");
     }
 
-    if ((rc = eg_screen_sync(screen)))
-      DIE("eg_screen_sync failed");
+    if ((rc = eg_io_sync(io)))
+      DIE("eg_io_sync failed");
 
     uint64_t now;
     if ((rc = get_time(&now)))
       DIE("clock_gettime failed");
     const int tick = TICK - (int)(now - last_tick);
 
-    const eg_event_t event = tick <= 0 ? (eg_event_t){.type = EG_EVENT_TICK}
-                                       : eg_screen_read(screen, tick);
+    const eg_event_t event =
+        tick <= 0 ? (eg_event_t){.type = EG_EVENT_TICK} : eg_io_read(io, tick);
 
     if (event.type == EG_EVENT_KEYPRESS && event.value == 0x4) // Ctrl-D
       break;
@@ -133,9 +133,8 @@ int main(void) {
         DIE("clock_gettime failed");
       if (me_row != rows - 12) {
         // clear us
-        if ((rc =
-                 eg_screen_puts(screen, (me_column + 1) * 2, me_row + 1, "  ")))
-          DIE("eg_screen_puts failed");
+        if ((rc = eg_io_puts(io, (me_column + 1) * 2, me_row + 1, "  ")))
+          DIE("eg_io_puts failed");
         // move us
         me_row += y_velocity;
         if (me_row > rows - 12)
@@ -148,20 +147,19 @@ int main(void) {
                 const size_t c = (me_column - i / 2 + 1 + j) * 2;
                 if (c >= columns)
                   continue;
-                if ((rc = eg_screen_puts(screen, c, me_row - i / 2 + k + 1,
-                                         "💥")))
-                  DIE("eg_screen_puts failed");
+                if ((rc = eg_io_puts(io, c, me_row - i / 2 + k + 1, "💥")))
+                  DIE("eg_io_puts failed");
               }
             }
-            if ((rc = eg_screen_sync(screen)))
-              DIE("eg_screen_sync failed");
+            if ((rc = eg_io_sync(io)))
+              DIE("eg_io_sync failed");
             (void)sleep(1);
           }
           break;
         }
         // redraw us
-        if ((rc = eg_screen_puts(screen, (me_column + 1) * 2, me_row + 1, ME)))
-          DIE("eg_screen_puts failed");
+        if ((rc = eg_io_puts(io, (me_column + 1) * 2, me_row + 1, ME)))
+          DIE("eg_io_puts failed");
         // apply gravity
         y_velocity += 1;
       }
@@ -176,9 +174,8 @@ int main(void) {
           scene[0] = horizon();
         } else {
           // clear us
-          if ((rc = eg_screen_puts(screen, (me_column + 1) * 2, me_row + 1,
-                                   "  ")))
-            DIE("eg_screen_puts failed");
+          if ((rc = eg_io_puts(io, (me_column + 1) * 2, me_row + 1, "  ")))
+            DIE("eg_io_puts failed");
           // move us
           --me_column;
         }
@@ -193,9 +190,8 @@ int main(void) {
           scene[columns / 2 - 1] = horizon();
         } else {
           // clear us
-          if ((rc = eg_screen_puts(screen, (me_column + 1) * 2, me_row + 1,
-                                   "  ")))
-            DIE("eg_screen_puts failed");
+          if ((rc = eg_io_puts(io, (me_column + 1) * 2, me_row + 1, "  ")))
+            DIE("eg_io_puts failed");
           // move us
           ++me_column;
         }
@@ -211,7 +207,7 @@ int main(void) {
 
 done:
   free(scene);
-  eg_screen_free(&screen);
+  eg_io_free(&io);
 
   return rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -1,5 +1,7 @@
 add_library(endgame
-  src/screen.c
+  src/input.c
+  src/io.c
+  src/output.c
 )
 
 target_include_directories(endgame

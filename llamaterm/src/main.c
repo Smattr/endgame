@@ -30,11 +30,11 @@ static int get_time(uint64_t *ms) {
 
 int main(void) {
 
-  eg_screen_t *screen = NULL;
+  eg_io_t *io = NULL;
   int rc = 0;
 
-  if ((rc = eg_screen_new(&screen, stdout, stdin))) {
-    fprintf(stderr, "failed to setup screen: %s\n", strerror(rc));
+  if ((rc = eg_io_new(&io, stdin, stdout))) {
+    fprintf(stderr, "failed to setup I/O: %s\n", strerror(rc));
     goto done;
   }
 
@@ -43,47 +43,47 @@ int main(void) {
 
   uint64_t last_tick;
   if ((rc = get_time(&last_tick))) {
-    eg_screen_free(&screen);
+    eg_io_free(&io);
     fprintf(stderr, "clock_gettime failed: %s\n", strerror(rc));
     goto done;
   }
 
   while (true) {
-    if ((rc = eg_screen_puts(screen, column, row, LLAMA))) {
-      eg_screen_free(&screen);
+    if ((rc = eg_io_puts(io, column, row, LLAMA))) {
+      eg_io_free(&io);
       fprintf(stderr, "failed to write llama: %s\n", strerror(rc));
       goto done;
     }
 
-    if ((rc = eg_screen_sync(screen))) {
-      eg_screen_free(&screen);
-      fprintf(stderr, "failed to sync screen: %s\n", strerror(rc));
+    if ((rc = eg_io_sync(io))) {
+      eg_io_free(&io);
+      fprintf(stderr, "failed to sync I/O: %s\n", strerror(rc));
       goto done;
     }
 
     uint64_t now;
     if ((rc = get_time(&now))) {
-      eg_screen_free(&screen);
+      eg_io_free(&io);
       fprintf(stderr, "clock_gettime failed: %s\n", strerror(rc));
       goto done;
     }
     const int tick = TICK - (int)(now - last_tick);
 
-    const eg_event_t event = tick <= 0 ? (eg_event_t){.type = EG_EVENT_TICK}
-                                       : eg_screen_read(screen, tick);
+    const eg_event_t event =
+        tick <= 0 ? (eg_event_t){.type = EG_EVENT_TICK} : eg_io_read(io, tick);
 
     if (event.type == EG_EVENT_KEYPRESS && event.value == 0x4) // Ctrl-D
       break;
 
-    if ((rc = eg_screen_puts(screen, column, row, " "))) {
-      eg_screen_free(&screen);
+    if ((rc = eg_io_puts(io, column, row, " "))) {
+      eg_io_free(&io);
       fprintf(stderr, "failed to overwrite llama: %s\n", strerror(rc));
       goto done;
     }
 
     if (event.type == EG_EVENT_TICK) {
       if ((rc = get_time(&last_tick))) {
-        eg_screen_free(&screen);
+        eg_io_free(&io);
         fprintf(stderr, "clock_gettime failed: %s\n", strerror(rc));
         goto done;
       }
@@ -106,7 +106,7 @@ int main(void) {
   }
 
 done:
-  eg_screen_free(&screen);
+  eg_io_free(&io);
 
   return rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
