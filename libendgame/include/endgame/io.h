@@ -81,6 +81,24 @@ ENDGAME_API int eg_io_puts(eg_io_t *me, size_t x, size_t y, const char *text);
 /// \return 0 on success or an errno on failure
 ENDGAME_API int eg_io_sync(eg_io_t *me);
 
+/// set the game “tick” for this device
+///
+/// The game “tick” is a timeout in ms after which a tick is considered to have
+/// happened, interrupting `eg_io_read` and returning to your control loop. The
+/// point of this is to give you an iteration in which to update the display,
+/// move sprites, adjust countdowns, etc. Tick can be specified as:
+///   1. A number of milliseconds. This indirectly determines the framerate of
+///      your game. That is, `fps = 1000 / tick`.
+///   2. ≤0, indicating there is no tick. This means game actions will only
+///      happen when the user presses keys. That is, `eg_io_read` blocks
+///      indefinitely until a key is pressed.
+/// `io_t` objects are initially created with a 0 tick.
+///
+/// \param me I/O device to update
+/// \param tick Tick value to set
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_io_set_tick(eg_io_t *me, int tick);
+
 /// get a new event
 ///
 /// This function blocks until there is a key press or a signal is received, or
@@ -88,17 +106,9 @@ ENDGAME_API int eg_io_sync(eg_io_t *me);
 /// by reading stdin. This means e.g. Ctrl-D comes out as 0x4. Non-ASCII UTF-8
 /// characters are also readable naturally this way.
 ///
-/// The game “tick” specified by the `tick` parameter can be either:
-///   1. A number of milliseconds. This indirectly determines the framerate of
-///      the game. That is, `fps = 1000 / tick`.
-///   2. -1, indicating there is no tick. This means game actions will only
-///      happen when the user presses keys. That is, `eg_screen_read` blocks
-///      indefinitely until a key is pressed.
-///
 /// \param me I/O device to read from
-/// \param tick Timeout (ms) after which a tick is considered to have happened
 /// \return Event seen
-ENDGAME_API eg_event_t eg_io_read(eg_io_t *me, int tick);
+ENDGAME_API eg_event_t eg_io_read(eg_io_t *me);
 
 /// blank the screen, clearing all text
 ///

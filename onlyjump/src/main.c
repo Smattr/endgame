@@ -2,7 +2,6 @@
 #include <endgame/endgame.h>
 #include <errno.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,21 +29,6 @@ static const char *horizon(void) {
 /// how often each game step happens
 static const int TICK = 200; // milliseconds
 
-/// convert a timespec to milliseconds
-static uint64_t ts2ms(struct timespec ts) {
-  return (uint64_t)ts.tv_sec * 1000 + (uint64_t)ts.tv_nsec / 1000000;
-}
-
-/// get the current time in milliseconds
-static int get_time(uint64_t *ms) {
-  assert(ms != NULL);
-  struct timespec ts = {0};
-  if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0)
-    return errno;
-  *ms = ts2ms(ts);
-  return 0;
-}
-
 int main(void) {
 
   eg_io_t *io = NULL;
@@ -62,6 +46,8 @@ int main(void) {
 
   if ((rc = eg_io_new(&io, stdin, stdout)))
     DIE("eg_io_new failed");
+  if ((rc = eg_io_set_tick(io, TICK)))
+    DIE("eg_io_set_tick failed");
 
   const size_t rows = eg_io_get_rows(io);
   const size_t columns = eg_io_get_columns(io);
@@ -91,10 +77,6 @@ int main(void) {
 
   int y_velocity = 0;
 
-  uint64_t last_tick;
-  if ((rc = get_time(&last_tick)))
-    DIE("clock_gettime failed");
-
   for (size_t me_column = MY_START, me_row = rows - 12;;) {
 
     // draw the scenery and us
@@ -115,13 +97,7 @@ int main(void) {
     if ((rc = eg_io_sync(io)))
       DIE("eg_io_sync failed");
 
-    uint64_t now;
-    if ((rc = get_time(&now)))
-      DIE("clock_gettime failed");
-    const int tick = TICK - (int)(now - last_tick);
-
-    const eg_event_t event =
-        tick <= 0 ? (eg_event_t){.type = EG_EVENT_TICK} : eg_io_read(io, tick);
+    const eg_event_t event = eg_io_read(io);
 
     if (event.type == EG_EVENT_KEYPRESS && event.value == 0x4) // Ctrl-D
       break;
@@ -129,8 +105,6 @@ int main(void) {
       break;
 
     if (event.type == EG_EVENT_TICK) {
-      if ((rc = get_time(&last_tick)))
-        DIE("clock_gettime failed");
       if (me_row != rows - 12) {
         // clear us
         if ((rc = eg_io_puts(io, (me_column + 1) * 2, me_row + 1, "  ")))

@@ -58,7 +58,7 @@ int main(void) {
     DIE("eg_io_sync failed");
 
   // block until the user presses a key
-  (void)eg_io_read(io, -1);
+  (void)eg_io_read(io);
 
 done:
   eg_io_free(&io);
