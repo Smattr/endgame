@@ -14,3 +14,5 @@
 #include <endgame/input.h>
 #include <endgame/io.h>
 #include <endgame/output.h>
+#include <endgame/scene.h>
+#include <endgame/sprite.h>
