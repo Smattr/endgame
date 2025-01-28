@@ -185,14 +185,33 @@ int eg_output_debug(eg_output_t *me, const char *format, ...) {
   if (format == NULL)
     return EINVAL;
 
+  int rc = 0;
+  va_list ap;
+
+  va_start(ap, format);
+
+  if ((rc = eg_output_vdebug(me, format, ap)))
+    goto done;
+
+done:
+  va_end(ap);
+
+  return rc;
+}
+
+int eg_output_vdebug(eg_output_t *me, const char *format, va_list ap) {
+
+  if (me == NULL)
+    return EINVAL;
+
+  if (!me->active)
+    return EINVAL;
+
   // drain anything pending to avoid it coming out once we switch away from
   // the alternate screen
   fflush(me->out);
 
   int rc = 0;
-  va_list ap;
-
-  va_start(ap, format);
 
   // switch out of the alternate screen
   if (fprintf(me->out, "\033[?1049l") < 0) {
@@ -213,8 +232,6 @@ int eg_output_debug(eg_output_t *me, const char *format, ...) {
   fflush(me->out);
 
 done:
-  va_end(ap);
-
   return rc;
 }
 

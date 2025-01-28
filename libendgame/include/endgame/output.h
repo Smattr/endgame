@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -83,6 +84,17 @@ ENDGAME_API int eg_output_clear(eg_output_t *me);
 /// \param ... `printf`-style format arguments
 /// \return 0 on success or an errno on failure
 ENDGAME_API int eg_output_debug(eg_output_t *me, const char *format, ...);
+
+/// print a debugging message
+///
+/// This is the same as `eg_output_debug`, but takes a `va_list`.
+///
+/// \param me Output to write to
+/// \param format A `printf`-style format string
+/// \param ap `printf`-style format arguments
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_output_vdebug(eg_output_t *me, const char *format,
+                                 va_list ap);
 
 /// resume operation after a debug message
 ///
