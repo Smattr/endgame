@@ -10,6 +10,7 @@ struct eg_output {
   FILE *out; ///< output handle to the TTY
 
   bool active;    ///< has the backing TTY been modified?
+  bool debug;     ///< are we currently in debug mode?
   size_t columns; ///< terminal width;
   size_t rows;    ///< terminal height
 

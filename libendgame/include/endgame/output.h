@@ -72,14 +72,27 @@ ENDGAME_API int eg_output_clear(eg_output_t *me);
 /// print a debugging message
 ///
 /// This temporarily switches away from the alternate screen and prints your
-/// debug message. That is, you will not be able to see your debugging output
-/// until after exiting.
+/// debug message. The alternate screen will remain inactive until you call
+/// `eg_output_continue`. None of the other functions in this header (except
+/// `eg_output_debug` itself) will be usable until you do this. Debugging does
+/// not nest; a single `eg_output_continue` call is enough to resume after
+/// multiple `eg_output_debug` calls.
 ///
 /// \param me Output to write to
 /// \param format A `printf`-style format string
 /// \param ... `printf`-style format arguments
 /// \return 0 on success or an errno on failure
 ENDGAME_API int eg_output_debug(eg_output_t *me, const char *format, ...);
+
+/// resume operation after a debug message
+///
+/// This switches back to the alternate screen, allowing you to resume gameplay.
+/// It is an error to call this if you have not previously called
+/// `eg_output_debug`.
+///
+/// \param me Output to resume
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_output_continue(eg_output_t *me);
 
 /// reverse the setup steps from `eg_output_new`
 ///

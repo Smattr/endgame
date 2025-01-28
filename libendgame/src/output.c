@@ -128,6 +128,8 @@ int eg_output_put(eg_output_t *me, size_t x, size_t y, const char *text,
                   size_t len) {
   if (me == NULL)
     return EINVAL;
+  if (me->debug)
+    return EINVAL;
   if (len > INT_MAX)
     return ERANGE;
   if (x > me->columns)
@@ -148,6 +150,9 @@ int eg_output_sync(eg_output_t *me) {
   if (me == NULL)
     return EINVAL;
 
+  if (me->debug)
+    return EINVAL;
+
   if (fflush(me->out) < 0)
     return errno;
 
@@ -157,6 +162,9 @@ int eg_output_sync(eg_output_t *me) {
 int eg_output_clear(eg_output_t *me) {
 
   if (me == NULL)
+    return EINVAL;
+
+  if (me->debug)
     return EINVAL;
 
   // clear screen and move to upper left
@@ -192,11 +200,33 @@ int eg_output_debug(eg_output_t *me, const char *format, ...) {
     goto done;
   }
 
+  // set debug here, so we know we are in the normal screen
+  me->debug = true;
+
   // print what the user requested
   if (vfprintf(me->out, format, ap) < 0) {
     rc = EIO;
     goto done;
   }
+
+  // ensure this is visible to the user
+  fflush(me->out);
+
+done:
+  va_end(ap);
+
+  return rc;
+}
+
+int eg_output_continue(eg_output_t *me) {
+
+  if (me == NULL)
+    return EINVAL;
+
+  if (!me->debug)
+    return EINVAL;
+
+  int rc = 0;
 
   // drain anything pending to avoid it coming out once we switch back to
   // the alternate screen
@@ -208,12 +238,12 @@ int eg_output_debug(eg_output_t *me, const char *format, ...) {
     goto done;
   }
 
+  me->debug = false;
+
   // ensure this switch is perceived by the user
   fflush(me->out);
 
 done:
-  va_end(ap);
-
   return rc;
 }
 
