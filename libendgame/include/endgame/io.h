@@ -75,6 +75,17 @@ ENDGAME_API int eg_io_put(eg_io_t *me, size_t x, size_t y, const char *text,
 /// \return 0 on success or an errno on failure
 ENDGAME_API int eg_io_puts(eg_io_t *me, size_t x, size_t y, const char *text);
 
+/// write `printf`-style arguments to the I/O device
+///
+/// \param me Screen to write to
+/// \param x Column at which to begin the write
+/// \param y Row at which to begin the write
+/// \param format A `printf`-style format string
+/// \param ... `printf`-style format arguments
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_io_print(eg_io_t *me, size_t x, size_t y, const char *format,
+                            ...);
+
 /// flush pending writes to the I/O device
 ///
 /// \param me I/O device to synchronise

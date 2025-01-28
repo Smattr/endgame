@@ -167,6 +167,33 @@ int eg_io_puts(eg_io_t *me, size_t x, size_t y, const char *text) {
   return eg_output_puts(me->out, x, y, text);
 }
 
+int eg_io_print(eg_io_t *me, size_t x, size_t y, const char *format, ...) {
+
+  if (me == NULL)
+    return EINVAL;
+
+  char *buffer = NULL;
+  va_list ap;
+  int rc = 0;
+
+  va_start(ap, format);
+
+  if (vasprintf(&buffer, format, ap) < 0) {
+    buffer = NULL;
+    rc = ENOMEM;
+    goto done;
+  }
+
+  if ((rc = eg_io_puts(me, x, y, buffer)))
+    goto done;
+
+done:
+  free(buffer);
+  va_end(ap);
+
+  return rc;
+}
+
 int eg_io_sync(eg_io_t *me) {
 
   if (me == NULL)
