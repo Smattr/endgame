@@ -1,6 +1,7 @@
 #include "scene.h"
 #include "sprite.h"
 #include <assert.h>
+#include <endgame/io.h>
 #include <endgame/scene.h>
 #include <endgame/sprite.h>
 #include <errno.h>
@@ -153,6 +154,48 @@ int eg_scene_add(eg_scene_t *me, int64_t x, int64_t y, int64_t z,
 
 done:
   return rc;
+}
+
+int eg_scene_paint(const eg_scene_t *me, eg_io_t *io, eg_2D_t origin) {
+
+  if (me == NULL)
+    return EINVAL;
+
+  if (io == NULL)
+    return EINVAL;
+
+  const size_t rows = eg_io_get_rows(io);
+  const size_t columns = eg_io_get_columns(io);
+
+  size_t i = 0;
+
+  for (size_t row = 0; row < rows; ++row) {
+    for (size_t col = 0; col < columns; ++col) {
+      const int64_t rel_x = origin.x + (int64_t)col;
+      const int64_t rel_y = origin.y + (int64_t)row;
+
+      // find the sprite at this position
+      while (i < me->n_sprites && me->sprites[i]->y < rel_y)
+        ++i;
+      while (i < me->n_sprites && me->sprites[i]->y == rel_y &&
+             me->sprites[i]->x < rel_x)
+        ++i;
+      while (i + 1 < me->n_sprites && me->sprites[i + 1]->y == rel_y &&
+             me->sprites[i + 1]->x == rel_x)
+        ++i;
+
+      const char *s = (i < me->n_sprites && me->sprites[i]->y == rel_y &&
+                       me->sprites[i]->x == rel_x)
+                          ? me->sprites[i]->forms[me->sprites[i]->form]
+                          : NULL;
+
+      const int rc = eg_io_puts(io, col + 1, row + 1, s == NULL ? " " : s);
+      if (rc != 0)
+        return rc;
+    }
+  }
+
+  return 0;
 }
 
 int eg_scene_remove(eg_scene_t *me, eg_sprite_handle_p handle) {

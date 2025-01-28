@@ -1,5 +1,6 @@
 #pragma once
 
+#include <endgame/io.h>
 #include <endgame/sprite.h>
 #include <stdint.h>
 
@@ -48,6 +49,36 @@ ENDGAME_API int eg_scene_new(eg_scene_t **me);
 ENDGAME_API int eg_scene_add(eg_scene_t *me, int64_t x, int64_t y, int64_t z,
                              const eg_sprite_t *sprite,
                              eg_sprite_handle_p *handle);
+
+/// a point within 2-D space
+typedef struct {
+  int64_t x;
+  int64_t y;
+} eg_2D_t;
+
+/// draw a partial view of a scene
+///
+/// The idea behind this function is to draw a finite “view box” within a
+/// (potentially infinite-ish height/width) scene onto a display device. E.g.:
+///
+///                   scene Y
+///                      ▲
+///                      │
+///                      │ ┌──────────┐
+///                      │ │ view box │
+///   ◄──────────────────┼─┼──────────┼─────► scene X
+///                   0,0│ └──────────┘
+///                      │
+///                      │
+///                      ▼
+///
+/// \param me Scene to display
+/// \param io Device to draw onto
+/// \param origin Coordinates within `scene` to consider the top left limit of
+///   the I/O’s view box
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_scene_paint(const eg_scene_t *me, eg_io_t *io,
+                               eg_2D_t origin);
 
 /// remove a sprite from a scene
 ///
