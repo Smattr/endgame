@@ -116,6 +116,33 @@ ENDGAME_API eg_event_t eg_io_read(eg_io_t *me);
 /// \return 0 on success or an errno on failure
 ENDGAME_API int eg_io_clear(eg_io_t *me);
 
+/// print a debugging message
+///
+/// This temporarily switches away from the alternate screen and prints a debug
+/// message. You can have gameplay resume after a fixed number of seconds, by
+/// passing `pause > 0`. Alternatively you can have gameplay still paused when
+/// this function returns, by passing `pause == 0`. In the latter case, you need
+/// to eventually call `eg_io_continue` to resume gameplay. While gameplay is
+/// paused, other functions in this header may be unusable.
+///
+/// \param me Output to write to
+/// \param pause An optional number of seconds to wait before resuming
+/// \param format A `printf`-style format string
+/// \param ... `printf`-style format arguments
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_io_debug(eg_io_t *me, unsigned pause, const char *format,
+                            ...);
+
+/// resume operation after a debug message
+///
+/// This switches back to the alternate screen, allowing you to resume gameplay.
+/// It is an error to call this if you have not previously called
+/// `eg_io_debug`.
+///
+/// \param me Output to resume
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_io_continue(eg_io_t *me);
+
 /// reverse the setup steps from `eg_io_new`
 ///
 /// After calling this function, `eg_io_new` must be called again before

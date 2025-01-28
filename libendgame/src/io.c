@@ -5,10 +5,12 @@
 #include <endgame/io.h>
 #include <endgame/output.h>
 #include <errno.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 int eg_io_new(eg_io_t **me, FILE *in, FILE *out) {
 
@@ -179,6 +181,45 @@ int eg_io_clear(eg_io_t *me) {
     return EINVAL;
 
   return eg_output_clear(me->out);
+}
+
+int eg_io_debug(eg_io_t *me, unsigned pause, const char *format, ...) {
+
+  if (me == NULL)
+    return EINVAL;
+
+  if (format == NULL)
+    return EINVAL;
+
+  int rc = 0;
+  va_list ap;
+
+  va_start(ap, format);
+
+  if ((rc = eg_output_vdebug(me->out, format, ap)))
+    goto done;
+
+  // were we asked to resume after a pause?
+  if (pause > 0) {
+
+    (void)sleep(pause);
+
+    if ((rc = eg_io_continue(me)))
+      goto done;
+  }
+
+done:
+  va_end(ap);
+
+  return rc;
+}
+
+int eg_io_continue(eg_io_t *me) {
+
+  if (me == NULL)
+    return EINVAL;
+
+  return eg_output_continue(me->out);
 }
 
 void eg_io_free(eg_io_t **me) {
