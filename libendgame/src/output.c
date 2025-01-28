@@ -3,6 +3,7 @@
 #include <endgame/output.h>
 #include <errno.h>
 #include <limits.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -163,6 +164,57 @@ int eg_output_clear(eg_output_t *me) {
     return EIO;
 
   return 0;
+}
+
+int eg_output_debug(eg_output_t *me, const char *format, ...) {
+
+  if (me == NULL)
+    return EINVAL;
+
+  if (!me->active)
+    return EINVAL;
+
+  if (format == NULL)
+    return EINVAL;
+
+  // drain anything pending to avoid it coming out once we switch away from
+  // the alternate screen
+  fflush(me->out);
+
+  int rc = 0;
+  va_list ap;
+
+  va_start(ap, format);
+
+  // switch out of the alternate screen
+  if (fprintf(me->out, "\033[?1049l") < 0) {
+    rc = EIO;
+    goto done;
+  }
+
+  // print what the user requested
+  if (vfprintf(me->out, format, ap) < 0) {
+    rc = EIO;
+    goto done;
+  }
+
+  // drain anything pending to avoid it coming out once we switch back to
+  // the alternate screen
+  fflush(me->out);
+
+  // switch back to the alternate screen
+  if (fprintf(me->out, "\033[?1049h") < 0) {
+    rc = EIO;
+    goto done;
+  }
+
+  // ensure this switch is perceived by the user
+  fflush(me->out);
+
+done:
+  va_end(ap);
+
+  return rc;
 }
 
 void eg_output_free(eg_output_t **me) {

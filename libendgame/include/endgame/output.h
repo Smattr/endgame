@@ -69,6 +69,18 @@ ENDGAME_API int eg_output_sync(eg_output_t *me);
 /// \return 0 on success or an errno on failure
 ENDGAME_API int eg_output_clear(eg_output_t *me);
 
+/// print a debugging message
+///
+/// This temporarily switches away from the alternate screen and prints your
+/// debug message. That is, you will not be able to see your debugging output
+/// until after exiting.
+///
+/// \param me Output to write to
+/// \param format A `printf`-style format string
+/// \param ... `printf`-style format arguments
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_output_debug(eg_output_t *me, const char *format, ...);
+
 /// reverse the setup steps from `eg_output_new`
 ///
 /// After calling this function, `eg_output_new` must be called again before
