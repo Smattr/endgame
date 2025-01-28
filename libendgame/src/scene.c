@@ -34,8 +34,10 @@ done:
 }
 
 static int cmp(const void *a, const void *b) {
-  const sprite_t *const x = a;
-  const sprite_t *const y = b;
+  const sprite_t *const *const xp = a;
+  const sprite_t *const *const yp = b;
+  const sprite_t *const x = *xp;
+  const sprite_t *const y = *yp;
   if (x->y < y->y)
     return -1;
   if (x->y > y->y)
