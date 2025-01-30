@@ -63,6 +63,7 @@ ENDGAME_API int eg_scene_add(eg_scene_t *me, int64_t x, int64_t y, int64_t z,
 ///
 /// What counts as modification:
 ///   • `eg_scene_add`
+///   • `eg_scene_move`
 ///   • `eg_scene_remove`
 ///
 /// If you do not call this before calling `eg_scene_paint`, it will be done for
@@ -99,6 +100,20 @@ typedef struct {
 ///   the I/O’s view box
 /// \return 0 on success or an errno on failure
 ENDGAME_API int eg_scene_paint(eg_scene_t *me, eg_io_t *io, eg_2D_t origin);
+
+/// move an existing sprite within a scene
+///
+/// If you pass a sprite handle derived from a different scene than the one
+/// passed, then behaviour is undefined.
+///
+/// \param me Scene to operate on
+/// \param subject Handle to sprite to move
+/// \param x New X position of the sprite
+/// \param y New Y position of the sprite
+/// \param z New Z position of the sprite
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_scene_move(eg_scene_t *me, eg_sprite_handle_p subject,
+                              int64_t x, int64_t y, int64_t z);
 
 /// remove a sprite from a scene
 ///

@@ -210,6 +210,26 @@ int eg_scene_paint(eg_scene_t *me, eg_io_t *io, eg_2D_t origin) {
   return 0;
 }
 
+int eg_scene_move(eg_scene_t *me, eg_sprite_handle_p subject, int64_t x,
+                  int64_t y, int64_t z) {
+
+  if (me == NULL)
+    return EINVAL;
+
+  if (subject == NULL)
+    return EINVAL;
+
+  sprite_t *sprite = subject;
+
+  sprite->x = x;
+  sprite->y = y;
+  sprite->z = z;
+
+  me->needs_sync = true;
+
+  return 0;
+}
+
 int eg_scene_remove(eg_scene_t *me, eg_sprite_handle_p handle) {
 
   if (me == NULL)
