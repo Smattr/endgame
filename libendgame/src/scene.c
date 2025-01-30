@@ -149,6 +149,8 @@ int eg_scene_add(eg_scene_t *me, int64_t x, int64_t y, int64_t z,
   me->sprites[me->n_sprites]->z = z;
   ++me->n_sprites;
 
+  *handle = me->sprites[me->n_sprites - 1];
+
   me->needs_sync = true;
 done:
   return rc;
