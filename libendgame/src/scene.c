@@ -230,6 +230,24 @@ int eg_scene_move(eg_scene_t *me, eg_sprite_handle_p subject, int64_t x,
   return 0;
 }
 
+int eg_scene_morph(eg_scene_t *me, eg_sprite_handle_p subject, size_t form) {
+
+  if (me == NULL)
+    return EINVAL;
+
+  if (subject == NULL)
+    return EINVAL;
+
+  sprite_t *sprite = subject;
+
+  if (form >= sprite->n_forms)
+    return ERANGE;
+
+  sprite->form = form;
+
+  return 0;
+}
+
 int eg_scene_remove(eg_scene_t *me, eg_sprite_handle_p handle) {
 
   if (me == NULL)

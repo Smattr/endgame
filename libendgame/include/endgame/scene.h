@@ -2,6 +2,7 @@
 
 #include <endgame/io.h>
 #include <endgame/sprite.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -114,6 +115,18 @@ ENDGAME_API int eg_scene_paint(eg_scene_t *me, eg_io_t *io, eg_2D_t origin);
 /// \return 0 on success or an errno on failure
 ENDGAME_API int eg_scene_move(eg_scene_t *me, eg_sprite_handle_p subject,
                               int64_t x, int64_t y, int64_t z);
+
+/// change the current form of a sprite
+///
+/// If you pass a sprite handle derived from a different scene than the one
+/// passed, then behaviour is undefined.
+///
+/// \param me Scene to operate on
+/// \param subject Handle to sprite to alter
+/// \param form Index of form to switch to
+/// \return 0 on success or an errno on failure
+ENDGAME_API int eg_scene_morph(eg_scene_t *me, eg_sprite_handle_p subject,
+                               size_t form);
 
 /// remove a sprite from a scene
 ///
