@@ -50,6 +50,27 @@ ENDGAME_API int eg_scene_add(eg_scene_t *me, int64_t x, int64_t y, int64_t z,
                              const eg_sprite_t *sprite,
                              eg_sprite_handle_p *handle);
 
+/// synchronise internal bookkeeping
+///
+/// After modifying the sprites in a scene, internal data structures must be
+/// updated before rendering to an output device. This function does these
+/// updates and should be called any time you are modifying sprites.
+///
+/// The reason this exists separately rather than being done automatically any
+/// time sprite modification happens is to allow you to amortise the cost of
+/// this operation. E.g. you can add multiple sprites and then only call this
+/// function once just before output.
+///
+/// What counts as modification:
+///   • `eg_scene_add`
+///   • `eg_scene_remove`
+///
+/// If you do not call this before calling `eg_scene_paint`, it will be done for
+/// you.
+///
+/// \param me Scene to synchronise
+ENDGAME_API void eg_scene_sync(eg_scene_t *me);
+
 /// a point within 2-D space
 typedef struct {
   int64_t x;
@@ -77,8 +98,7 @@ typedef struct {
 /// \param origin Coordinates within `scene` to consider the top left limit of
 ///   the I/O’s view box
 /// \return 0 on success or an errno on failure
-ENDGAME_API int eg_scene_paint(const eg_scene_t *me, eg_io_t *io,
-                               eg_2D_t origin);
+ENDGAME_API int eg_scene_paint(eg_scene_t *me, eg_io_t *io, eg_2D_t origin);
 
 /// remove a sprite from a scene
 ///

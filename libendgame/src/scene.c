@@ -149,20 +149,32 @@ int eg_scene_add(eg_scene_t *me, int64_t x, int64_t y, int64_t z,
   me->sprites[me->n_sprites]->z = z;
   ++me->n_sprites;
 
-  // rearrange it into position
-  sort_sprites(me);
-
+  me->needs_sync = true;
 done:
   return rc;
 }
 
-int eg_scene_paint(const eg_scene_t *me, eg_io_t *io, eg_2D_t origin) {
+void eg_scene_sync(eg_scene_t *me) {
+
+  if (me == NULL)
+    return;
+
+  // make sure sprites are ordered consistently
+  sort_sprites(me);
+
+  me->needs_sync = false;
+}
+
+int eg_scene_paint(eg_scene_t *me, eg_io_t *io, eg_2D_t origin) {
 
   if (me == NULL)
     return EINVAL;
 
   if (io == NULL)
     return EINVAL;
+
+  if (me->needs_sync)
+    eg_scene_sync(me);
 
   const size_t rows = eg_io_get_rows(io);
   const size_t columns = eg_io_get_columns(io);
@@ -213,6 +225,11 @@ int eg_scene_remove(eg_scene_t *me, eg_sprite_handle_p handle) {
       for (size_t j = i; j + 1 < me->n_sprites; ++j)
         me->sprites[j] = me->sprites[j + 1];
       --me->n_sprites;
+
+      // Technically we do not need to set `needs_sync` here because the sprite
+      // array is still ordered. But we keep this as part of the API contract
+      // just in case future changes make this necessary.
+
       return 0;
     }
   }

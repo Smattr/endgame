@@ -2,6 +2,7 @@
 
 #include "sprite.h"
 #include <endgame/scene.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 struct eg_scene {
@@ -12,4 +13,6 @@ struct eg_scene {
   sprite_t **sprites;
   size_t n_sprites;
   size_t c_sprites;
+
+  bool needs_sync; ///< are the sprites potentially unsorted?
 };
